@@ -12,8 +12,9 @@ from engine import InstitutionalScannerEngine
 from retest_engine import RetestContinuationEngine
 
 app = FastAPI(title="HQ Liquidation Order Flow Matrix v2")
-templates = Jinja2Templates(directory="templates")
-
+import os
+base_dir = os.path.dirname(os.path.abspath(__file__))
+templates = Jinja2Templates(directory=os.path.join(base_dir, "templates"))
 engine = InstitutionalScannerEngine()
 retest_engine = RetestContinuationEngine()
 

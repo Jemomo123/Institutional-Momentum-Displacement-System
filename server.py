@@ -82,6 +82,9 @@ async def production_market_feed_loop():
                     if df_3m.empty or df_5m.empty or df_15m.empty or df_1h.empty:
                         continue
 
+                    # DEBUG CHECK 1: Verify data rows are loaded successfully
+                    print(f"{symbol} 3m={len(df_3m)} 5m={len(df_5m)} 15m={len(df_15m)} 1h={len(df_1h)}")
+
                     mtf_context = {"3m": df_3m, "5m": df_5m, "15m": df_15m}
                     
                     # Generate a baseline Open Interest proxy tracking metric vector matching schemas
@@ -89,6 +92,10 @@ async def production_market_feed_loop():
                     
                     # 2. Feed live data into the Core Engine
                     impulse = engine.process_impulse(mtf_context, oi_mock_series, df_1h)
+                    
+                    # DEBUG CHECK 2: See exactly what the engine is returning (or if it returns None)
+                    print(f"{symbol} IMPULSE={impulse}")
+                    
                     if impulse:
                         retest_engine.register_block(symbol, "5m", impulse)
                     
@@ -96,11 +103,16 @@ async def production_market_feed_loop():
                     current_live_price = float(df_5m['close'].iloc[-1])
                     dispatched = retest_engine.evaluate_live_lifecycle(symbol, "5m", current_live_price)
                     
+                    # DEBUG CHECK 3: See if the retest engine processed any matching rules
+                    print(f"{symbol} ALERTS={len(dispatched)}")
+                    
                     if dispatched:
                         # Append new alerts securely without clearing previous active states
                         for new_alert in dispatched:
                             if new_alert not in LIVE_TRACKING_ALERTS:
                                 LIVE_TRACKING_ALERTS.append(new_alert)
+                                # DEBUG CHECK 4: Confirm alert is officially saved to global memory
+                                print(f"ALERT CREATED: {new_alert}")
 
             except Exception as e:
                 print(f"[LIVE PRODUCTION ROUTING ERROR] Exception on {symbol}: {e}")
@@ -132,3 +144,4 @@ async def stream_signals(request: Request):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=10000)
+            

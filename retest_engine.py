@@ -18,7 +18,8 @@ class TrackedOrderBlockProfile:
         # State Machine Matrix: ACTIVE -> LEFT_ZONE -> RETESTED -> INVALIDATED
         self.state = "ACTIVE"
         self.retest_index = 0
-        self.is_inside_now = false
+        self.is_inside_now = False
+
         self.quality_score = 100.0
 
 class RetestContinuationEngine:

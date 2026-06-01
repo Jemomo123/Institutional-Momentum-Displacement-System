@@ -93,34 +93,40 @@ async def production_market_feed_loop():
                     # 2. Feed live data into the Core Engine
                     impulse = engine.process_impulse(mtf_context, oi_mock_series, df_1h)
                     
-                    # DEBUG CHECK 2: See exactly what the engine is returning (or if it returns None)
+                    # DEBUG CHECK 2: See exactly what the engine is returning
                     print(f"{symbol} IMPULSE={impulse}")
                     
                     if impulse:
                         retest_engine.register_block(symbol, "5m", impulse)
                     
-                    # 3. Track live retests using real-time price tick data
+                    # 3. Track live retests using real-time price high, low, and close points
                     current_live_price = float(df_5m['close'].iloc[-1])
-                    dispatched = retest_engine.evaluate_live_lifecycle(symbol, "5m", current_live_price)
+                    current_high = float(df_5m['high'].iloc[-1])
+                    current_low = float(df_5m['low'].iloc[-1])
+                    
+                    dispatched = retest_engine.evaluate_live_lifecycle(
+                        symbol, 
+                        "5m", 
+                        current_live_price,
+                        current_high,
+                        current_low
+                    )
                     
                     # DEBUG CHECK 3: See if the retest engine processed any matching rules
                     print(f"{symbol} ALERTS={len(dispatched)}")
                     
                     if dispatched:
-                        # Append new alerts securely without clearing previous active states
                         for new_alert in dispatched:
                             if new_alert not in LIVE_TRACKING_ALERTS:
                                 LIVE_TRACKING_ALERTS.append(new_alert)
-                                # DEBUG CHECK 4: Confirm alert is officially saved to global memory
+                                # DEBUG CHECK 4: Confirm alert is officially saved
                                 print(f"ALERT CREATED: {new_alert}")
 
             except Exception as e:
                 print(f"[LIVE PRODUCTION ROUTING ERROR] Exception on {symbol}: {e}")
             
-            # Tiny sleep interval between assets to stay completely under exchange API rate limits
             await asyncio.sleep(0.5)
             
-        # Complete rest interval before cycling the full watchlist matrix again
         await asyncio.sleep(5)
 
 @app.on_event("startup")
@@ -129,7 +135,8 @@ async def startup_event():
 
 @app.get("/", response_class=HTMLResponse)
 async def desktop_gateway(request: Request):
-    return templates.TemplateResponse(request, "index.html")
+    # Fixed syntax dict mapping for standard template engines
+    return templates.TemplateResponse("index.html", {"request": request})
 
 @app.get("/stream/signals")
 async def stream_signals(request: Request):
@@ -144,4 +151,4 @@ async def stream_signals(request: Request):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=10000)
-            
+                    

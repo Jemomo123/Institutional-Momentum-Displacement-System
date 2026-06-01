@@ -135,8 +135,8 @@ async def startup_event():
 
 @app.get("/", response_class=HTMLResponse)
 async def desktop_gateway(request: Request):
-    # Fixed syntax dict mapping for standard template engines
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request, "index.html")
+
 
 @app.get("/stream/signals")
 async def stream_signals(request: Request):

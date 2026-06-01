@@ -2,19 +2,20 @@ import streamlit as st
 import pandas as pd
 from engine import InstitutionalEngine
 
+# Force clean, mobile-responsive dark styling
 st.set_page_config(page_title="DISPLACEMENT_LIFECYCLE_V2", layout="centered")
 st.markdown("""
     <style>
         body, .main, .block-container { background-color: #0b0e11 !important; color: #eaecef !important; font-family: 'Courier New', monospace; }
         h1, h2, h3 { color: #f0b90b !important; text-align: center; font-size: 1.1rem !important; }
-        .stTable { background-color: #12161a !important; border-radius: 4px; padding: 5px; width: 100% !important; }
+        div[data-testid="stHtmlBlock"] table { background-color: #12161a !important; border-radius: 4px; padding: 5px; width: 100% !important; margin: 0 auto; }
         th { color: #848e9c !important; font-size: 0.75rem !important; text-transform: uppercase; border-bottom: 1px solid #2b3139 !important; }
         td { font-size: 0.8rem !important; padding: 8px !important; border-bottom: 1px dashed #2b3139 !important; }
         .badge-mega { background-color: #f0b90b; color: #000; padding: 2px 6px; font-weight: bold; border-radius: 3px; animation: blinker 1.5s linear infinite; }
         .badge-active { background-color: #f6465d; color: #fff; padding: 2px 6px; font-weight: bold; border-radius: 3px; }
         @keyframes blinker { 50% { opacity: 0; } }
     </style>
-""", unsafe_allow_index=True)
+""", unsafe_allow_html=True)
 
 st.title("⚡ JEREMIAH EDGE LIVE FEED MATRIX")
 
@@ -73,3 +74,4 @@ if dashboard_rows:
     st.write(df_display.to_html(escape=False, index=False), unsafe_allow_index=True)
 else:
     st.markdown("<p style='text-align:center;color:#848e9c;font-size:0.8rem;margin-top:2rem;'>Matrix Online. Scanning 25 asset vectors for independent squeeze clusters...</p>", unsafe_allow_index=True)
+    

@@ -5,8 +5,8 @@ from typing import Dict, Any, List, Optional
 
 class InterchangeableExchangeMatrix:
     def __init__(self):
-        # Reduced priority matrix focusing tightly on your 4 core platforms
-        self.exchanges_priority = ["binance", "okx", "mexc", "gateio"]
+        # Modified priority matrix: OKX moved to first priority, Binance moved to last
+        self.exchanges_priority = ["okx", "mexc", "gateio", "binance"]
         
         # Public REST API base endpoints
         self.api_endpoints = {
@@ -26,8 +26,8 @@ class InterchangeableExchangeMatrix:
 
     async def fetch_candles_from_exchange(self, exchange: str, symbol: str, timeframe: str) -> Optional[List[List[Any]]]:
         """
-        Handles raw HTTP requests for the 4 core exchange APIs with pinpoint symbol tracking.
-        Logs the explicit URL, status code, and first 200 characters of a failure payload.
+        Handles raw HTTP requests for the 4 core exchange APIs with targeted logging matrix.
+        Provides strict response status and body logs for diagnostics.
         """
         base_url = self.api_endpoints.get(exchange)
         tf_mapped = self.timeframe_maps[exchange].get(timeframe, "5m")
@@ -36,27 +36,28 @@ class InterchangeableExchangeMatrix:
             "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1"
         }
         
-        # Strip any formatting artifacts out of the raw watchlist text token string
         clean_symbol = symbol.replace(":", "").replace("-", "").replace("_", "").upper()
         
         async with httpx.AsyncClient(timeout=10.0, headers=headers) as client:
             try:
                 if exchange == "binance":
-                    # Binance Futures Format: BTCUSDT strictly uppercase
                     url = f"{base_url}/fapi/v1/klines"
                     params = {"symbol": clean_symbol, "interval": tf_mapped, "limit": 200}
                     res = await client.get(url, params=params)
                     
+                    # Immediate restriction skip verification gate
+                    if res.status_code == 451:
+                        print(f"🛑 [GEO BLOCK] BINANCE returned Status 451. Skipping immediately due to server regional restrictions.")
+                        return None
+                        
                     if res.status_code == 200:
                         data = res.json()
                         if isinstance(data, list) and len(data) > 0:
                             return data
                     
-                    # Enhanced Failure Diagnostics Logging
                     print(f"❌ [FETCH ERROR] BINANCE Fail -> URL: {url} | Status: {res.status_code} | Body (200 chars): {res.text[:200]}")
 
                 elif exchange == "okx":
-                    # OKX Instrument ID Layout Format: BTC-USDT-SWAP
                     if clean_symbol.endswith("USDT"):
                         base_coin = clean_symbol.replace("USDT", "")
                         okx_inst = f"{base_coin}-USDT-SWAP"
@@ -67,28 +68,28 @@ class InterchangeableExchangeMatrix:
                     params = {"instId": okx_inst, "bar": tf_mapped, "limit": 200}
                     res = await client.get(url, params=params)
                     
-                    if res.status_code == 200:
-                        data = res.json().get("data", [])
-                        if isinstance(data, list) and len(data) > 0:
-                            return data
-                            
-                    print(f"❌ [FETCH ERROR] OKX Fail -> URL: {url} Params: {params} | Status: {res.status_code} | Body (200 chars): {res.text[:200]}")
-
-                elif exchange == "mexc":
-                    # MEXC Linear Swap Endpoint tracking path parameters
-                    url = f"{base_url}/api/v1/contract/kline/{clean_symbol}"
-                    params = {"interval": tf_mapped, "limit": 200}
-                    res = await client.get(url, params=params)
+                    # Added explicit logging visibility block for OKX state verification
+                    print(f"🔍 [DIAGNOSTIC] OKX Response -> Status: {res.status_code} | Body (200 chars): {res.text[:200]}")
                     
                     if res.status_code == 200:
                         data = res.json().get("data", [])
                         if isinstance(data, list) and len(data) > 0:
                             return data
-                            
-                    print(f"❌ [FETCH ERROR] MEXC Fail -> URL: {url} | Status: {res.status_code} | Body (200 chars): {res.text[:200]}")
+
+                elif exchange == "mexc":
+                    url = f"{base_url}/api/v1/contract/kline/{clean_symbol}"
+                    params = {"interval": tf_mapped, "limit": 200}
+                    res = await client.get(url, params=params)
+                    
+                    # Added explicit logging visibility block for MEXC state verification
+                    print(f"🔍 [DIAGNOSTIC] MEXC Response -> Status: {res.status_code} | Body (200 chars): {res.text[:200]}")
+                    
+                    if res.status_code == 200:
+                        data = res.json().get("data", [])
+                        if isinstance(data, list) and len(data) > 0:
+                            return data
 
                 elif exchange == "gateio":
-                    # GateIO Delivery Layout Format: BTC_USDT passed as 'contract' parameter
                     if clean_symbol.endswith("USDT") and "_" not in clean_symbol:
                         gate_contract = clean_symbol.replace("USDT", "_USDT")
                     else:
@@ -98,12 +99,13 @@ class InterchangeableExchangeMatrix:
                     params = {"contract": gate_contract, "interval": tf_mapped, "limit": 200}
                     res = await client.get(url, params=params)
                     
+                    # Added explicit logging visibility block for Gate.io state verification
+                    print(f"🔍 [DIAGNOSTIC] GATEIO Response -> Status: {res.status_code} | Body (200 chars): {res.text[:200]}")
+                    
                     if res.status_code == 200:
                         data = res.json()
                         if isinstance(data, list) and len(data) > 0:
                             return data
-                            
-                    print(f"❌ [FETCH ERROR] GATEIO Fail -> URL: {url} Params: {params} | Status: {res.status_code} | Body (200 chars): {res.text[:200]}")
 
                 else:
                     return None
@@ -115,7 +117,6 @@ class InterchangeableExchangeMatrix:
     async def fetch_candles_with_failover(self, symbol: str, timeframe: str) -> Dict[str, Any]:
         """
         Iterates through the 4 core exchanges in priority order.
-        Verifies non-empty arrays are returned before successfully shifting states.
         """
         for exchange in self.exchanges_priority:
             print(f"[FAILOVER MATRIX] Attempting data fetch on {exchange.upper()} for {symbol} ({timeframe})...")
@@ -131,9 +132,9 @@ class InterchangeableExchangeMatrix:
                 
             print(f"⚠️ [FAILOVER MATRIX] {exchange.upper()} API failed or timed out. Falling back...")
             
-        # Cleaned up and confirmed syntax connection lines
         return {
             "source_exchange": None,
             "status": "CRITICAL_ALL_EXCHANGES_FAILED",
             "data": []
         }
+        

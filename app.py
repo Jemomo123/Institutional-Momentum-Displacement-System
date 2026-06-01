@@ -16,6 +16,7 @@ st.markdown("""
         @keyframes blinker { 50% { opacity: 0; } }
     </style>
 """, unsafe_allow_html=True)
+st.write(df_display.to_html(escape=False, index=False), unsafe_allow_html=True)
 
 st.title("⚡ JEREMIAH EDGE LIVE FEED MATRIX")
 

@@ -61,6 +61,7 @@ for index, symbol in enumerate(engine.watch_pool, start=1):
             continue
             
         dashboard_rows.append({
+            "COIN": f"<b style='color:#ffffff;'>{symbol.split(':')[0] if ':' in symbol else symbol}</b>",
             "Col 1: SQZ Status": col1_output,
             "Col 2: Expansion": metrics["expansion"],
             "Col 3: BOS Status": f"{tf} {metrics['bos_status']}" if metrics["bos_status"] != "NONE" else "NONE",
@@ -77,3 +78,4 @@ if dashboard_rows:
     st.write(df_display.to_html(escape=False, index=False), unsafe_allow_html=True)
 else:
     st.markdown("<p style='text-align:center;color:#848e9c;font-size:0.8rem;margin-top:2rem;'>Matrix Online. Scanning 25 asset vectors for independent squeeze clusters...</p>", unsafe_allow_html=True)
+    

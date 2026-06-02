@@ -24,7 +24,54 @@ engine = InstitutionalEngine()
 dashboard_rows = []
 active_sources = set()
 
-for symbol in engine.watch_pool:
+# Create a live placeholder text box right here for mobile tracking
+progress_placeholder = st.empty()
+
+# Use enumerate to count the items (1 to 25) as it scans
+for index, symbol in enumerate(engine.watch_pool, start=1):
+    # Dynamically update the phone screen with the active target item
+    progress_placeholder.markdown(f"⏳ *Scanning Watchlist Item {index}/{len(engine.watch_pool)}:* **{symbol}**")
+    
+    tf_data = {}
+    valid_token = True
+    
+    for tf in engine.timeframes:
+        df, active_ex = engine.fetch_live_candles(symbol, tf)
+        if df is not None:
+            tf_data[tf] = engine.analyze_sequence(df)
+            active_sources.add(active_ex.upper())
+        else:
+            valid_token = False
+            break
+            
+    if not valid_token:
+        continue
+        
+    is_mega = (tf_data["3m"]["sqz_status"] == "ALL TOGETHER" and 
+               tf_data["5m"]["sqz_status"] == "ALL TOGETHER" and 
+               tf_data["15m"]["sqz_status"] == "ALL TOGETHER")
+    
+    for tf in engine.timeframes:
+        metrics = tf_data[tf]
+        
+        if is_mega:
+            col1_output = '<span class="badge-mega">⚡ MEGA SQZ ⚡</span>'
+        elif metrics["sqz_status"] == "ALL TOGETHER":
+            col1_output = f"SQZ: {tf}"
+        else:
+            continue
+            
+        dashboard_rows.append({
+            "Col 1: SQZ Status": col1_output,
+            "Col 2: Expansion": metrics["expansion"],
+            "Col 3: BOS Status": f"{tf} {metrics['bos_status']}" if metrics["bos_status"] != "NONE" else "NONE",
+            "Col 4: OB Origin Zone": metrics["ob_zone"],
+            "Col 5: Retest Status": f'<span class="badge-active">{metrics["retest_status"]}</span>' if "ACTIVE" in metrics["retest_status"] else metrics["retest_status"]
+        })
+
+# Clear out the scanning tracker text when execution completes so the screen stays clean
+progress_placeholder.empty()
+
     tf_data = {}
     valid_token = True
     

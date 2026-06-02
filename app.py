@@ -15,6 +15,7 @@ st.markdown("""
         .badge-active { background-color: #f6465d; color: #fff; padding: 2px 6px; font-weight: bold; border-radius: 3px; }
         @keyframes blinker { 50% { opacity: 0; } }
     </style>
+
 """, unsafe_allow_html=True)
 
 st.title("⚡ JEREMIAH EDGE LIVE FEED MATRIX")

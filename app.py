@@ -87,12 +87,5 @@ if 'dashboard_rows' in locals() and dashboard_rows:
 else:
     st.markdown("<p style='text-align:center;color:#848e9c;font-size:0.8rem;margin-top:2rem;'>Matrix Online. Scanning 25 asset vectors for independent squeeze clusters...</p>", unsafe_allow_html=True)
     
-    # Render live matrix data safely directly to your mobile phone screen
-if 'dashboard_rows' in locals() and dashboard_rows:
-    import pandas as pd
-    df_display = pd.DataFrame(dashboard_rows)
-    st.write(df_display.to_html(escape=False, index=False), unsafe_allow_html=True)
-else:
     st.markdown("<p style='text-align:center;color:#848e9c;font-size:0.8rem;margin-top:2rem;'>Matrix Online. Scanning 25 asset vectors for independent squeeze clusters...</p>", unsafe_allow_html=True)
-("<p style='text-align:center;color:#848e9c;font-size:0.8rem;margin-top:2rem;'>Matrix Online. Scanning 25 asset vectors for independent squeeze clusters...</p>", unsafe_allow_index=True)
-    
+st.markdown("<p style='text-align:center;color:#848e9c;font-size:0.8rem;margin-top:2rem;'>Matrix Online. Scanning 25 asset vectors for independent squeeze clusters...</p>", unsafe_allow_html=True)

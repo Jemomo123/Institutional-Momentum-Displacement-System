@@ -16,14 +16,11 @@ st.markdown("""
         @keyframes blinker { 50% { opacity: 0; } }
     </style>
 """, unsafe_allow_html=True)
-st.write(df_display.to_html(escape=False, index=False), unsafe_allow_html=True)
 
 st.title("⚡ JEREMIAH EDGE LIVE FEED MATRIX")
 
 engine = InstitutionalEngine()
 dashboard_rows = []
-
-# Top Status Bar showing active connection sources
 active_sources = set()
 
 for symbol in engine.watch_pool:
@@ -66,26 +63,9 @@ for symbol in engine.watch_pool:
             "Col 5: Retest Status": f'<span class="badge-active">{metrics["retest_status"]}</span>' if "ACTIVE" in metrics["retest_status"] else metrics["retest_status"]
         })
 
-# Show which platform is feeding the matrix live
-st.markdown(f"<p style='text-align:center; color:#848e9c; font-size:0.75rem;'>ACTIVE ROUTING FEED: {', '.join(active_sources)}</p>", unsafe_allow_index=True)
-
-# Render live table rows directly to mobile phone screen
+# Render final display table or scanning status message cleanly
 if dashboard_rows:
     df_display = pd.DataFrame(dashboard_rows)
-    # Render live matrix data safely directly to your mobile phone screen
-if 'dashboard_rows' in locals() and dashboard_rows:
-    import pandas as pd
-    df_display = pd.DataFrame(dashboard_rows)
     st.write(df_display.to_html(escape=False, index=False), unsafe_allow_html=True)
 else:
     st.markdown("<p style='text-align:center;color:#848e9c;font-size:0.8rem;margin-top:2rem;'>Matrix Online. Scanning 25 asset vectors for independent squeeze clusters...</p>", unsafe_allow_html=True)
-    # Render live matrix data safely directly to your mobile phone screen
-if 'dashboard_rows' in locals() and dashboard_rows:
-    import pandas as pd
-    df_display = pd.DataFrame(dashboard_rows)
-    st.write(df_display.to_html(escape=False, index=False), unsafe_allow_html=True)
-else:
-    st.markdown("<p style='text-align:center;color:#848e9c;font-size:0.8rem;margin-top:2rem;'>Matrix Online. Scanning 25 asset vectors for independent squeeze clusters...</p>", unsafe_allow_html=True)
-    
-    st.markdown("<p style='text-align:center;color:#848e9c;font-size:0.8rem;margin-top:2rem;'>Matrix Online. Scanning 25 asset vectors for independent squeeze clusters...</p>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center;color:#848e9c;font-size:0.8rem;margin-top:2rem;'>Matrix Online. Scanning 25 asset vectors for independent squeeze clusters...</p>", unsafe_allow_html=True)
